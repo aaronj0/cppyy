@@ -1968,7 +1968,7 @@ class TestDATATYPES:
             assert len(f1.fPtrArr) == 3
             assert list(f1.fPtrArr) == [1., 2., 3]
 
-    @mark.xfail(run=not IS_CLANG_REPL, reason="Crashes")
+    @mark.xfail()
     def test39_aggregates(self):
         """Initializer construction of aggregates"""
 
@@ -2059,7 +2059,7 @@ class TestDATATYPES:
             r2 = ns.make_R2()
             assert r2.s.x == 1
 
-    @mark.xfail(run=False, reason="Clang-Repl")
+    @mark.xfail(run=False, reason="Crashes on Clang-Repl")
     def test41_complex_numpy_arrays(self):
         """Usage of complex numpy arrays"""
 

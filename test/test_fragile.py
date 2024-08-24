@@ -477,7 +477,7 @@ class TestFRAGILE:
         assert not 'ESysConstants' in dd
         assert not 'kDoRed' in dd
 
-    @mark.xfail(run=False, reason="Crashes")
+    @mark.xfail()
     def test20_capture_output(self):
         """Capture cerr into a string"""
 
@@ -618,7 +618,8 @@ class TestSIGNALS:
         import cppyy
         cls.fragile = cppyy.load_reflection_info(cls.test_dct)
 
-    @mark.xfail(run=False, reason="Crashes")
+    # @mark.xfail(run=False, reason="Crashes")
+    @mark.skip()
     def test01_abortive_signals(self):
         """Conversion from abortive signals to Python exceptions"""
 

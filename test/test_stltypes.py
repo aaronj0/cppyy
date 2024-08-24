@@ -1578,7 +1578,7 @@ class TestSTLARRAY:
             assert gbl.ArrayTest.get_pa_px(a.data(), i) == 13*i
             assert gbl.ArrayTest.get_pa_py(a.data(), i) == 42*i
 
-    @mark.xfail(run=False, reason="Crashes")
+    @mark.xfail
     def test04_array_from_aggregate(self):
         """Initialize an array from an aggregate contructor"""
 
