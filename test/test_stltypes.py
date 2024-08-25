@@ -455,7 +455,6 @@ class TestSTLVECTOR:
         assert std.distance(v.begin(), v.end()) == v.size()
         assert std.distance[type(v).iterator](v.begin(), v.end()) == v.size()
 
-    @mark.xfail
     def test11_vector_of_pair(self):
         """Use of std::vector<std::pair>"""
 
@@ -673,7 +672,6 @@ class TestSTLVECTOR:
         v = np.array(v, dtype=np.intc)
         assert ns.func(v) == sum(v)
 
-    @mark.xfail(run=not((IS_MAC_ARM or IS_MAC_X86) and not IS_CLANG_REPL))
     def test19_vector_point3d(self):
         """Iteration over a vector of by-value objects"""
 
@@ -1578,7 +1576,6 @@ class TestSTLARRAY:
             assert gbl.ArrayTest.get_pa_px(a.data(), i) == 13*i
             assert gbl.ArrayTest.get_pa_py(a.data(), i) == 42*i
 
-    @mark.xfail
     def test04_array_from_aggregate(self):
         """Initialize an array from an aggregate contructor"""
 
@@ -1889,7 +1886,6 @@ class TestSTLPAIR:
         cls.stltypes = cppyy.load_reflection_info(cls.test_dct)
         cls.N = cppyy.gbl.N
 
-    @mark.xfail
     def test01_pair_pack_unpack(self):
         """Pack/unpack pairs"""
 

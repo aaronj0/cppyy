@@ -400,7 +400,7 @@ class TestCROSSINHERITANCE:
         gc.collect()
         assert CB.s_count == 0 + start_count
 
-    @mark.xfail()
+    @mark.xfail
     def test12_python_shared_ptr_memory(self):
         """Usage of Python derived objects with std::shared_ptr"""
 

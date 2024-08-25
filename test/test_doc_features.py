@@ -939,7 +939,6 @@ class TestADVERTISED:
         val = createit(ptr)
         assert destroyit(ptr) == val
 
-    @mark.xfail
     def test07_array_of_arrays(self):
         """Example of array of array usage"""
 
@@ -1097,7 +1096,6 @@ class TestTALKEXAMPLES:
 
         cppyy.gbl.talk_examples
 
-    @mark.xfail(run=not((IS_MAC_ARM or IS_MAC_X86) and not IS_CLANG_REPL))
     def test_template_instantiation(self):
         """Run-time template instantiation example"""
 

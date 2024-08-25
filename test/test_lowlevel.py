@@ -32,7 +32,6 @@ class TestLOWLEVEL:
 
         assert cppyy.types.LowLevelView
 
-    @mark.xfail
     def test02_builtin_cpp_casts(self):
         """C++ casting of builtin types"""
 
@@ -137,7 +136,7 @@ class TestLOWLEVEL:
         f = array('f', [0]);     ctd.set_float_r(f);  assert f[0] ==  5.
         f = array('d', [0]);     ctd.set_double_r(f); assert f[0] == -5.
 
-    @mark.xfail(run=False, reason="Valgrind detects memory leak with invalid delete[] operator, crashes")
+    @mark.xfail(run=False, reason="Valgrind detects memory leak with invalid delete[] operator, crashes on Cling")
     def test06_ctypes_as_ref_and_ptr(self):
         """Use ctypes for pass-by-ref/ptr"""
 
@@ -370,7 +369,6 @@ class TestLOWLEVEL:
         with raises(TypeError):
             cppyy.gbl.ArrayOfCStrings.takes_array_of_cstrings(pyargs, len(pyargs))
 
-    @mark.xfail
     def test11_array_of_const_char_ref(self):
         """Test passting of const char**&"""
 

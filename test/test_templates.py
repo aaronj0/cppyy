@@ -372,7 +372,6 @@ class TestTEMPLATES:
         assert rttest_make_tlist2(RTTest_SomeStruct1())
         assert rttest_make_tlist2(RTTest_SomeNamespace.RTTest_SomeStruct2())
 
-    @mark.xfail
     def test15_rvalue_templates(self):
         """Use of a template with r-values; should accept builtin types"""
 
@@ -1157,7 +1156,6 @@ class TestTEMPLATES:
         assert ns.testptr
         assert cppyy.gbl.std.vector[ns.testptr]
 
-    @mark.xfail(run=not((IS_MAC_ARM or IS_MAC_X86) and not IS_CLANG_REPL))
     def test34_cstring_template_argument(self):
         """`const char*` use over std::string"""
 

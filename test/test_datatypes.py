@@ -1968,7 +1968,7 @@ class TestDATATYPES:
             assert len(f1.fPtrArr) == 3
             assert list(f1.fPtrArr) == [1., 2., 3]
 
-    @mark.xfail()
+    @mark.xfail
     def test39_aggregates(self):
         """Initializer construction of aggregates"""
 
