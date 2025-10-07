@@ -205,7 +205,7 @@ class _stderr_capture(object):
 def cppdef(src):
     """Declare C++ source <src> to Cling."""
     with _stderr_capture() as err:
-        errcode = gbl.Cpp.Declare(src)
+        errcode = gbl.Cpp.Declare(src, False)
     if not errcode == 0 or err.err:
         if 'warning' in err.err.lower() and not 'error' in err.err.lower():
             warnings.warn(err.err, SyntaxWarning)
@@ -235,6 +235,9 @@ def cppexec(stmt):
 
     return True
 
+def evaluate(input, HadError = _backend.nullptr):
+    return gbl.Cpp.Evaluate(input, HadError)
+
 def macro(cppm):
     """Attempt to evalute a C/C++ pre-processor macro as a constant"""
 
@@ -252,8 +255,7 @@ def macro(cppm):
 def load_library(name):
     """Explicitly load a shared library."""
     with _stderr_capture() as err:
-        CppInterOp = gbl.Cpp
-        result = CppInterOp.LoadLibrary(name)
+        result = gbl.Cpp.LoadLibrary(name, True)
     if result == False:
         raise RuntimeError('Could not load library "%s": %s' % (name, err.err))
 
@@ -262,7 +264,7 @@ def load_library(name):
 def include(header):
     """Load (and JIT) header file <header> into Cling."""
     with _stderr_capture() as err:
-        errcode = gbl.Cpp.Declare('#include "%s"' % header)
+        errcode = gbl.Cpp.Declare('#include "%s"' % header, False)
     if not errcode == 0:
         raise ImportError('Failed to load header file "%s"%s' % (header, err.err))
     return True
@@ -271,8 +273,8 @@ def c_include(header):
     """Load (and JIT) header file <header> into Cling."""
     with _stderr_capture() as err:
         errcode = gbl.Cpp.Declare("""extern "C" {
-#include "%s"
-}""" % header)
+                                    #include "%s"
+                                    }""" % header, False)
     if not errcode == 0:
         raise ImportError('Failed to load header file "%s"%s' % (header, err.err))
     return True
@@ -404,7 +406,7 @@ def sizeof(tt):
         try:
             sz = ctypes.sizeof(tt)
         except TypeError:
-            sz = gbl.Cpp.Evaluate("sizeof(%s)" % (_get_name(tt),))
+            sz = gbl.Cpp.Evaluate("sizeof(%s)" % (_get_name(tt),), nullptr)
         _sizes[tt] = sz
         return sz
 

@@ -217,6 +217,8 @@ class CppFunctionNumbaType(nb_types.Callable):
         self._impl_keys[args] = ol
         self._arg_set_matched = numba_arg_convertor(args)
 
+        
+        # original_mod = ir.Module(cppyy.get_ir_module(ol.__cpp_name__))
 
         @nb_iutils.lower_builtin(ol, *args)
         def lower_external_call(context, builder, sig, args,
