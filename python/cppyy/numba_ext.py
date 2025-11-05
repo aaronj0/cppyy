@@ -32,7 +32,7 @@ class Qualified:
 ir_byte     = ir.IntType(8)
 ir_voidptr  = ir.PointerType(ir_byte)                 # by convention
 ir_byteptr  = ir_voidptr                              # for clarity
-ir_intptr_t = ir.IntType(cppyy.sizeof('void*')*8)
+ir_intptr_t = ir.IntType(64)
 
 # special case access to unboxing/boxing APIs
 cppyy_as_voidptr   = cppyy.addressof('Instance_AsVoidPtr')
@@ -220,17 +220,62 @@ class CppFunctionNumbaType(nb_types.Callable):
         
         # original_mod = ir.Module(cppyy.get_ir_module(ol.__cpp_name__))
 
+        # @nb_iutils.lower_builtin(ol, *args)
+        # def lower_external_call(context, builder, sig, args,
+        #         ty=nb_types.ExternalFunctionPointer(extsig, ol.get_pointer),
+        #         pyval=self._func, is_method=self._is_method):
+        #     ptrty = context.get_function_pointer_type(ty)
+        #     ptrval = context.add_dynamic_addr(
+        #         builder, ty.get_pointer(pyval), info=str(pyval))
+        #     fptr = builder.bitcast(ptrval, ptrty)
+        #     return context.call_function_pointer(builder, fptr, args)
+
         @nb_iutils.lower_builtin(ol, *args)
         def lower_external_call(context, builder, sig, args,
                 ty=nb_types.ExternalFunctionPointer(extsig, ol.get_pointer),
                 pyval=self._func, is_method=self._is_method):
-            ptrty = context.get_function_pointer_type(ty)
             ptrval = context.add_dynamic_addr(
                 builder, ty.get_pointer(pyval), info=str(pyval))
-            fptr = builder.bitcast(ptrval, ptrty)
-            return context.call_function_pointer(builder, fptr, args)
+            name = "_Z5add42IxET_S0_"
+            ee = context._internal_codegen._engine._ee
+            address = ee.get_function_address(name)
 
-        return ol.sig
+            if not address:
+                raise RuntimeError("UNOFUND address for %s" % str(pyval))
+            # breakpoint()
+            for mod in ee._modules:
+                # Get the module's IR as string to check
+                if(mod._cppjit_module):
+                    cpp_module = mod
+                    print(f"Found function definition in module:")
+                    print(f"  ModuleRef: {repr(mod)}")
+                    break
+
+                # mod_ir = str(mod)
+                # print("-----------------Module IR:--------------")
+                # print(mod_ir)
+                # print("----------------Module IR:-------------------")
+                # if name in mod_ir and 'define' in mod_ir:
+                #     # Found the module with the function definition
+                #     cpp_module = mod
+                #     print(f"Found function definition in module: {mod.name}")
+                #     break
+        
+            
+            ret_ty = context.get_value_type(sig.return_type)
+            arg_tys = [context.get_value_type(arg_ty) for arg_ty in sig.args]
+            fnty = ir.FunctionType(ret_ty, arg_tys)
+            
+            # create an LLVM IR constant from the python integer address
+            addr_const = ir.Constant(ir.IntType(64), address)
+            func_ptr = builder.inttoptr(addr_const, ir.PointerType(fnty))
+
+            inst = ir.instructions.CallInstr(builder.block, func_ptr, args)
+            inst.attributes.add('alwaysinline')
+            builder._insert(inst)
+            return inst
+
+        return ol.sig   
 
     def get_call_signatures(self):
         return list(self._signatures), False
