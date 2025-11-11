@@ -234,46 +234,87 @@ class CppFunctionNumbaType(nb_types.Callable):
         def lower_external_call(context, builder, sig, args,
                 ty=nb_types.ExternalFunctionPointer(extsig, ol.get_pointer),
                 pyval=self._func, is_method=self._is_method):
+            
+            calling_func = builder.function
+            print(f"Caller attributes: {list(calling_func.attributes)}")
+            breakpoint()
+            # Try to preempt noinline
+            if 'noinline' not in calling_func.attributes:
+                calling_func.attributes.add('alwaysinline')
+                print("✓ Preemptively added alwaysinline to caller")
+
             ptrval = context.add_dynamic_addr(
                 builder, ty.get_pointer(pyval), info=str(pyval))
-            name = "_Z5add42IxET_S0_"
+            name = "_Z5add42i"
             ee = context._internal_codegen._engine._ee
+            breakpoint()
             address = ee.get_function_address(name)
 
             if not address:
-                raise RuntimeError("UNOFUND address for %s" % str(pyval))
-            # breakpoint()
+                raise RuntimeError(f"Symbol {name} not found in JIT")
+            
+            # Find the C++ module with the function
+            cpp_func_ref = None
+            cpp_module = None
             for mod in ee._modules:
-                # Get the module's IR as string to check
-                if(mod._cppjit_module):
+                if mod._cppjit_module:
                     cpp_module = mod
-                    print(f"Found function definition in module:")
-                    print(f"  ModuleRef: {repr(mod)}")
+                    cpp_func_ref = mod.func
+                    print(f"Found C++ function:")
+                    print(f"  Name: {cpp_func_ref.name}")
+                    print(f"  Type: {cpp_func_ref.type}")
+                    print(f"  Linkage: {cpp_func_ref.linkage}")
+                    print(f"  Is declaration: {cpp_func_ref.is_declaration}")
+                    print(f"  Module: {repr(mod)}")
                     break
-
-                # mod_ir = str(mod)
-                # print("-----------------Module IR:--------------")
-                # print(mod_ir)
-                # print("----------------Module IR:-------------------")
-                # if name in mod_ir and 'define' in mod_ir:
-                #     # Found the module with the function definition
-                #     cpp_module = mod
-                #     print(f"Found function definition in module: {mod.name}")
-                #     break
-        
             
-            ret_ty = context.get_value_type(sig.return_type)
-            arg_tys = [context.get_value_type(arg_ty) for arg_ty in sig.args]
-            fnty = ir.FunctionType(ret_ty, arg_tys)
+            if cpp_func_ref is None:
+                raise RuntimeError("Could not find C++ function reference")
             
-            # create an LLVM IR constant from the python integer address
-            addr_const = ir.Constant(ir.IntType(64), address)
-            func_ptr = builder.inttoptr(addr_const, ir.PointerType(fnty))
+            print(f"Symbol {name} found at 0x{address:x}")
+            
+            # Get the Numba IR module
+            module = builder.module
 
-            inst = ir.instructions.CallInstr(builder.block, func_ptr, args)
-            inst.attributes.add('alwaysinline')
-            builder._insert(inst)
-            return inst
+
+            # context._internal_codegen._library_class.add_llvm_module(cpp_module)
+            # Check if function already declared in Numba's IR module
+            # func = None
+            for global_val in module.globals.values():
+                if hasattr(global_val, 'name') and global_val.name == name:
+                    if isinstance(global_val, ir.Function):
+                        func = global_val
+                        print(f"Function {name} already declared in Numba module")
+                        break
+            
+            func = None
+            if func is None:
+                # Create external declaration in Numba's IR module
+                ret_ty = context.get_value_type(sig.return_type)
+                arg_tys = [context.get_value_type(arg_ty) for arg_ty in sig.args]
+                fnty = ir.FunctionType(ret_ty, arg_tys)
+                
+                func = ir.Function(module, fnty, name=name)
+                func.linkage = 'external'
+                func.attributes.add('alwaysinline')
+
+                if hasattr(func, 'unnamed_addr'):
+                    func.unnamed_addr = ''
+                
+                print(f"✓ Declared external function {name} in Numba IR module")
+                print(f"  Linkage: {func.linkage}")
+                print(f"  Type: {fnty}")
+            breakpoint()
+            # Create direct symbolic call
+            # builder.function.attributes.add('alwaysinline')
+            
+            result = builder.call(func, args)
+            
+            print(f"✓ Created symbolic call to {name}")
+            print(f"  This will be resolved by JIT linker and inlined")
+            breakpoint()
+            module
+            return result
 
         return ol.sig   
 
