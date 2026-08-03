@@ -2292,6 +2292,7 @@ class TestSTLSPAN:
 
 class TestSTLANY:
 
+    @mark.xfail(reason="New Overload Resolution: std::make_any<MyClass*,MyClass*>(MyClass&) is ill-formed C++ (clang: no matching function); test relied on non-standard cppyy conversion")
     def test01_make_any(self):
         """
         Test that std::make_any can be used for class types.

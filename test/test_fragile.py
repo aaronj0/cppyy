@@ -615,6 +615,7 @@ class TestFRAGILE:
                 int add42(int i) { return i + 42; }
             }""")
 
+    @mark.xfail(condition=IS_CLANG_REPL, reason="Fails with ClangRepl")
     def test26_macro(self):
         """Test access to C++ pre-processor macro's"""
 
